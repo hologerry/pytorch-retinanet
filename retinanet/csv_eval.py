@@ -2,6 +2,8 @@ import numpy as np
 import torch
 
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def compute_overlap(a, b):
     """
     Parameters
@@ -84,12 +86,7 @@ def _get_detections(dataset, retinanet, score_threshold=0.05, max_detections=100
             scale = data['scale']
 
             # run network
-            if torch.cuda.is_available():
-                scores, labels, boxes = retinanet(data['img'].permute(
-                    2, 0, 1).cuda().float().unsqueeze(dim=0))
-            else:
-                scores, labels, boxes = retinanet(
-                    data['img'].permute(2, 0, 1).float().unsqueeze(dim=0))
+            scores, labels, boxes = retinanet(data['img'].permute(2, 0, 1).to(device).float().unsqueeze(dim=0))
             scores = scores.cpu().numpy()
             labels = labels.cpu().numpy()
             boxes = boxes.cpu().numpy()
@@ -144,8 +141,7 @@ def _get_annotations(generator):
 
         # copy detections to all_annotations
         for label in range(generator.num_classes()):
-            all_annotations[i][label] = annotations[annotations[:, 4]
-                                                    == label, :4].copy()
+            all_annotations[i][label] = annotations[annotations[:, 4] == label, :4].copy()
 
         print('{}/{}'.format(i + 1, len(generator)), end='\r')
 

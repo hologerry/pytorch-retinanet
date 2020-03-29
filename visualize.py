@@ -15,6 +15,7 @@ from retinanet.dataloader import (AspectRatioBasedSampler,
 assert torch.__version__.split('.')[0] == '1'
 
 print('CUDA available: {}'.format(torch.cuda.is_available()))
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def main(args=None):
@@ -52,14 +53,9 @@ def main(args=None):
 
     use_gpu = True
 
-    if use_gpu:
-        if torch.cuda.is_available():
-            retinanet = retinanet.cuda()
+    retinanet = retinanet.to(device)
 
-    if torch.cuda.is_available():
-        retinanet = torch.nn.DataParallel(retinanet).cuda()
-    else:
-        retinanet = torch.nn.DataParallel(retinanet)
+    retinanet = torch.nn.DataParallel(retinanet).to(device)
 
     retinanet.eval()
 
@@ -79,7 +75,7 @@ def main(args=None):
             st = time.time()
             if torch.cuda.is_available():
                 scores, classification, transformed_anchors = retinanet(
-                    data['img'].cuda().float())
+                    data['img'].to(device).float())
             else:
                 scores, classification, transformed_anchors = retinanet(
                     data['img'].float())

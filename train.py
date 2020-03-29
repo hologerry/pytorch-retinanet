@@ -18,6 +18,7 @@ print('CUDA available: {}'.format(torch.cuda.is_available()))
 
 
 def main(args=None):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     parser = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
 
     parser.add_argument('--dataset', help='Dataset type, must be one of csv or coco.', default='receipt')
@@ -90,16 +91,9 @@ def main(args=None):
     else:
         raise ValueError('Unsupported model depth, must be one of 18, 34, 50, 101, 152')
 
-    use_gpu = True
+    retinanet = retinanet.to(device)
 
-    if use_gpu:
-        if torch.cuda.is_available():
-            retinanet = retinanet.cuda()
-
-    if torch.cuda.is_available():
-        retinanet = torch.nn.DataParallel(retinanet).cuda()
-    else:
-        retinanet = torch.nn.DataParallel(retinanet)
+    retinanet = torch.nn.DataParallel(retinanet).to(device)
 
     retinanet.training = True
 
@@ -125,10 +119,7 @@ def main(args=None):
             try:
                 optimizer.zero_grad()
 
-                if torch.cuda.is_available():
-                    classification_loss, regression_loss = retinanet([data['img'].cuda().float(), data['annot']])
-                else:
-                    classification_loss, regression_loss = retinanet([data['img'].float(), data['annot']])
+                classification_loss, regression_loss = retinanet([data['img'].to(device).float(), data['annot']])
 
                 classification_loss = classification_loss.mean()
                 regression_loss = regression_loss.mean()

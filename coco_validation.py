@@ -12,6 +12,7 @@ print('CUDA available: {}'.format(torch.cuda.is_available()))
 
 
 def main(args=None):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     parser = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
 
     parser.add_argument('--coco_path', help='Path to COCO directory')
@@ -25,18 +26,10 @@ def main(args=None):
     # Create the model
     retinanet = model.resnet50(num_classes=dataset_val.num_classes(), pretrained=True)
 
-    use_gpu = True
+    retinanet = retinanet.to(device)
 
-    if use_gpu:
-        if torch.cuda.is_available():
-            retinanet = retinanet.cuda()
-
-    if torch.cuda.is_available():
-        retinanet.load_state_dict(torch.load(parser.model_path))
-        retinanet = torch.nn.DataParallel(retinanet).cuda()
-    else:
-        retinanet.load_state_dict(torch.load(parser.model_path))
-        retinanet = torch.nn.DataParallel(retinanet)
+    retinanet.load_state_dict(torch.load(parser.model_path))
+    retinanet = torch.nn.DataParallel(retinanet).to(device)
 
     retinanet.training = False
     retinanet.eval()

@@ -28,20 +28,12 @@ def main(args=None):
 
     use_gpu = False
 
-    if use_gpu:
-        if torch.cuda.is_available():
-            retinanet = retinanet.cuda()
+    retinanet = retinanet.to(device)
 
-    if torch.cuda.is_available():
-        retinanet.load_state_dict(torch.load(parser.model_path))
-        retinanet = torch.nn.DataParallel(retinanet).cuda()
-    else:
-        state_dict = torch.load(parser.model_path, map_location=device)
-        retinanet.load_state_dict(state_dict)
-
+    retinanet.load_state_dict(torch.load(parser.model_path, map_location=device))
     retinanet.training = False
     retinanet.eval()
-    retinanet.module.freeze_bn()
+    retinanet.freeze_bn()
 
     coco_eval.evaluate_coco(dataset_val, retinanet)
 

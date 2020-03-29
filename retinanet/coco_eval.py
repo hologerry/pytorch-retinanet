@@ -6,6 +6,7 @@ import time
 
 def evaluate_coco(dataset, model, threshold=0.05):
     model.eval()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     with torch.no_grad():
 
         # start collecting results
@@ -17,11 +18,7 @@ def evaluate_coco(dataset, model, threshold=0.05):
             scale = data['scale']
             start_time = time.time()
 
-            # run network
-            if torch.cuda.is_available():
-                scores, labels, boxes = model(data['img'].permute(2, 0, 1).cuda().float().unsqueeze(dim=0))
-            else:
-                scores, labels, boxes = model(data['img'].permute(2, 0, 1).float().unsqueeze(dim=0))
+            scores, labels, boxes = model(data['img'].permute(2, 0, 1).to(device).float().unsqueeze(dim=0))
             scores = scores.cpu()
             labels = labels.cpu()
             boxes = boxes.cpu()

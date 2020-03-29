@@ -1,6 +1,7 @@
 from pycocotools.cocoeval import COCOeval
 import json
 import torch
+import time
 
 
 def evaluate_coco(dataset, model, threshold=0.05):
@@ -14,6 +15,7 @@ def evaluate_coco(dataset, model, threshold=0.05):
         for index in range(len(dataset)):
             data = dataset[index]
             scale = data['scale']
+            start_time = time.time()
 
             # run network
             if torch.cuda.is_available():
@@ -23,6 +25,7 @@ def evaluate_coco(dataset, model, threshold=0.05):
             scores = scores.cpu()
             labels = labels.cpu()
             boxes = boxes.cpu()
+            detec_time = time.time()
 
             # correct boxes for image scale
             boxes /= scale
@@ -58,6 +61,7 @@ def evaluate_coco(dataset, model, threshold=0.05):
             image_ids.append(dataset.image_ids[index])
 
             # print progress
+            print("time", detec_time - start_time)
             print('{}/{}'.format(index, len(dataset)), end='\r')
 
         if not len(results):
